@@ -1,14 +1,47 @@
 package sparkgoweb
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
+
+type HandlerFunc func(http.ResponseWriter, *http.Request)
 
 type Engine struct {
-	routers map[string]http.HandlerFunc
+	router map[string]HandlerFunc
 }
 
 func Default() *Engine {
 	e := Engine{
-		routers: make(map[string]http.HandlerFunc, 0),
+		router: make(map[string]HandlerFunc, 0),
 	}
 	return &e
+}
+
+func (engine *Engine) addRoute(method string, pattern string, handler HandlerFunc) {
+	key := method + "-" + pattern
+	engine.router[key] = handler
+}
+
+func (engine *Engine) GET(pattern string, handler HandlerFunc) {
+	key := "GET" + "-" + pattern
+	engine.router[key] = handler
+}
+
+func (engine *Engine) POST(pattern string, handler HandlerFunc) {
+	key := "POST" + "-" + pattern
+	engine.router[key] = handler
+}
+
+func (engine *Engine) Run(addr string) (err error) {
+	return http.ListenAndServe(addr, engine)
+}
+
+func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	key := req.Method + "-" + req.URL.Path
+	if handler, ok := engine.router[key]; ok {
+		handler(w, req)
+	} else {
+		fmt.Fprintf(w, "404 NOT FOUND: %s\n", req.URL)
+	}
 }

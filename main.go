@@ -1,17 +1,16 @@
 package main
 
 import (
-	sparkGoWeb "example.com/m/v2/sparkGoWeb"
+	"example.com/m/v2/sparkgoweb"
 	"fmt"
-	"log"
 	"net/http"
 )
 
 func main() {
-	sparkGoWeb.Default()
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/hello", helloHandler)
-	log.Fatal(http.ListenAndServe(":9999", nil))
+	router := sparkgoweb.Default()
+	router.GET("/get", indexHandler)
+	router.POST("/post", helloHandler)
+	router.Run(":1234")
 }
 
 // handler echoes r.URL.Path
